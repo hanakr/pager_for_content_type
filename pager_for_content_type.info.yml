@@ -1,0 +1,13 @@
+name: Pager For Content Type
+description: Provides pager for node
+package: Custom
+type: module
+core_version_requirement: ^8 || ^9 || ^10
+configure: pager_for_content_type.settings
+dependencies:
+- node
+
+# Information added by Drupal.org packaging script on 2023-04-25
+version: '8.x-1.3'
+project: 'pager_for_content_type'
+datestamp: 1682453958

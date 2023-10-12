@@ -12,7 +12,8 @@ use Drupal\Core\Url;
 /**
  * Implements hook_help().
  */
-function pager_for_content_type_help($route_name, RouteMatchInterface $route_match) {
+function pager_for_content_type_help($route_name, RouteMatchInterface $route_match)
+{
   switch ($route_name) {
     case 'help.page.pager_for_content_type':
 
@@ -25,18 +26,17 @@ function pager_for_content_type_help($route_name, RouteMatchInterface $route_mat
       $output .= '</dl>';
 
       return $output;
-
   }
 }
 
 /**
  * Implements hook_preprocess_page().
  */
-function pager_for_content_type_preprocess_node(&$variables) {
+function pager_for_content_type_preprocess_node(&$variables)
+{
   // Nothing to do here if the user is not permitted to access manager links.
   if (!\Drupal::currentUser()
-    ->hasPermission('access to pager for content type')
-  ) {
+    ->hasPermission('access to pager for content type')) {
     return;
   }
 
@@ -82,28 +82,48 @@ function pager_for_content_type_preprocess_node(&$variables) {
  * @return array
  *   Array of pager.
  */
-function pager_for_content_type_get_pager($node_type, $node) {
+function pager_for_content_type_get_pager($node_type, $node)
+{
   $pager = [];
   if (\Drupal::currentUser()->hasPermission('access content')) {
 
     $db = \Drupal::database();
 
-    $query = $db->select('node_field_data', 'n');
-    $query->condition('n.type', $node_type, '=')
-      ->condition('n.status', '1', '=')
-      ->fields('n', ['nid'])
-      ->addTag('node_access');
-    $query->range(0, 1);
+    if ($node_type == 'article') {
+      $query = $db->select('node__field_date_event', 'art');
+      $query->join('node_field_data', 'n', 'n.nid = art.entity_id');
+      $query->condition('art.bundle', 'article')
+        ->condition('n.status', '1', '=')
+        ->fields('n', ['nid'])
+        ->addTag('node_access');
+      $query->range(0, 1);
 
-    // next.
-    $next_query = clone $query;
-    $next_query->condition('n.created', $node->getCreatedTime(), '>')
-      ->orderBy('n.created', 'ASC');
+      // next.
+      $next_query = clone $query;
+      $next_query->condition('art.field_date_event_value', $node->get('field_date_event')->value, '>')
+        ->orderBy('art.field_date_event_value', 'ASC');
 
-    // prev.
-    $prev_query = clone $query;
-    $prev_query->condition('n.created', $node->getCreatedTime(), '<')
-      ->orderBy('n.created', 'DESC');
+      // prev.
+      $prev_query = clone $query;
+      $prev_query->condition('art.field_date_event_value', $node->get('field_date_event')->value, '<')
+        ->orderBy('art.field_date_event_value', 'DESC');
+    } else {
+      $query = $db->select('node_field_data', 'n');
+      $query->condition('n.type', 'article', '=')
+        ->condition('n.status', '1', '=')
+        ->fields('n', ['nid'])
+        ->addTag('node_access');
+      $query->range(0, 1);
+      // next.
+      $next_query = clone $query;
+      $next_query->condition('n.created', $node->getCreatedTime(), '>')
+        ->orderBy('n.created', 'ASC');
+
+      // prev.
+      $prev_query = clone $query;
+      $prev_query->condition('n.created', $node->getCreatedTime(), '<')
+        ->orderBy('n.created', 'DESC');
+    }
 
     // hook_pager_for_content_type_query_alter.
     \Drupal::moduleHandler()
@@ -129,7 +149,8 @@ function pager_for_content_type_get_pager($node_type, $node) {
  * @return array
  *   The pager items as a render array.
  */
-function pager_for_content_type_get_pager_items($pager, $node_type, $node_type_label) {
+function pager_for_content_type_get_pager_items($pager, $node_type, $node_type_label)
+{
   $pager_next = (isset($pager['next_nid'])) ? $pager['next_nid'] : NULL;
   $pager_prev = (isset($pager['prev_nid'])) ? $pager['prev_nid'] : NULL;
 
@@ -196,7 +217,8 @@ function pager_for_content_type_get_pager_items($pager, $node_type, $node_type_l
  * @return array
  *   More links.
  */
-function pager_for_content_type_get_pager_more_links(array $node, $more_links_count) {
+function pager_for_content_type_get_pager_more_links(array $node, $more_links_count)
+{
   $items = [];
 
   if (\Drupal::currentUser()->hasPermission('access content')) {
@@ -261,7 +283,8 @@ function pager_for_content_type_get_pager_more_links(array $node, $more_links_co
 /**
  * Implements hook_pager_for_content_type_query_alter().
  */
-function pager_for_content_type_pager_for_content_type_query_alter(&$node, &$prev_query, &$next_query) {
+function pager_for_content_type_pager_for_content_type_query_alter(&$node, &$prev_query, &$next_query)
+{
   $filter_by_author = \Drupal::config('pager_for_content_type.settings')
     ->get($node->getType() . '_pager_for_content_type_author');
 
@@ -274,7 +297,8 @@ function pager_for_content_type_pager_for_content_type_query_alter(&$node, &$pre
 /**
  * Implements hook_pager_for_content_type_query_alter().
  */
-function pager_for_content_type_pager_for_content_type_more_links_query_alter(&$node, &$prev_query, &$next_query) {
+function pager_for_content_type_pager_for_content_type_more_links_query_alter(&$node, &$prev_query, &$next_query)
+{
   $filter_by_author = \Drupal::config('pager_for_content_type.settings')
     ->get($node->getType() . '_pager_for_content_type_author');
 
